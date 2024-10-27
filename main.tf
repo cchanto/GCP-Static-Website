@@ -74,7 +74,7 @@ module "static_site" {
 
 resource "google_storage_bucket_object" "index" {
   name    = var.index_page
-  content = "Hello, World fucking test !"
+  content = "Hello, World fucking testv2!"
   bucket  = module.static_site.website_bucket_name
 }
 
