@@ -1,65 +1,110 @@
-[![Maintained by Gruntwork.io](https://img.shields.io/badge/maintained%20by-gruntwork.io-%235849a6.svg)](https://gruntwork.io/?ref=repo_google_static_assets)
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/gruntwork-io/terraform-google-static-assets.svg?label=latest)](https://github.com/gruntwork-io/terraform-google-static-assets/releases/latest)
-![Terraform Version](https://img.shields.io/badge/tf-%3E%3D1.0.x-blue.svg)
+Static Website Deployment on Google Cloud with Terraform
+This project demonstrates how to deploy a static website on Google Cloud Storage (GCS) with HTTPS using Cloud CDN and Google Cloud DNS. Infrastructure as Code (IaC) is managed using Terraform to automate the deployment process.
 
-<!-- NOTE: Because the module is published to Terraform Module Registry, we have to use absolute links in all READMEs. -->
+Project Overview
+Website Hosting: The static website is hosted in a GCS bucket.
+HTTPS: Configured with Cloud CDN and SSL certificates for secure access.
+DNS: Cloud DNS is set up for a custom domain.
+Caching: Cloud CDN is used to speed up content delivery, and cache settings are configurable.
+Prerequisites
+Google Cloud Account: A GCP account with necessary permissions (Storage Admin, Compute Admin, and DNS Admin).
+Terraform: Version 0.12+ is required.
+gcloud CLI: Set up and authenticated to manage Google Cloud resources.
+Architecture
+Google Cloud Storage (GCS): Hosts the static website files.
+Cloud CDN: Provides content caching and HTTPS.
+Cloud DNS: Manages the custom domain for the website.
+Directory Structure
+graphql
 
-# Static Assets Modules
+project-root/
+├── main.tf                   # Root Terraform configuration
+├── modules/
+│   └── cloud-storage-static-website/ # Module for GCS setup
+│       ├── main.tf
+│       ├── variables.tf
+│       └── outputs.tf
+├── index.html                # Static HTML file for the website
+└── README.md                 # Project documentation
+Setup & Configuration
+1. Configure Google Cloud Project and Variables
+Define the necessary variables in variables.tf or using environment variables in Terraform.
 
-This repo contains modules for managing static assets (CSS, JS, images) in GCP.
+hcl
 
-## Quickstart
+variable "project" {
+  description = "The Google Cloud Project ID"
+  type        = string
+}
 
-If you want to quickly launch a static website using [Google Cloud Storage](https://cloud.google.com/storage/),
-you can run the example that is in the root of this repo. Check out the [cloud-storage-static-website example documentation](https://github.com/gruntwork-io/terraform-google-static-assets/blob/master/examples/cloud-storage-static-website) for instructions.
+variable "website_domain_name" {
+  description = "Domain name for the website (e.g., example.com)"
+  type        = string
+}
 
-## What's in this repo
+variable "website_location" {
+  description = "Region for the GCS bucket (e.g., US)"
+  type        = string
+}
 
-This repo has the following folder structure:
+variable "index_page" {
+  description = "Name of the main page (e.g., index.html)"
+  type        = string
+  default     = "index.html"
+}
 
-- [root](https://github.com/gruntwork-io/terraform-google-static-assets/tree/master): The root folder contains an example of how to launch a static website using [Google Cloud Storage](https://cloud.google.com/storage/). See [cloud-storage-static-website example documentation](https://github.com/gruntwork-io/terraform-google-static-assets/blob/master/examples/cloud-storage-static-website) for the documentation.
+variable "not_found_page" {
+  description = "Name of the 404 page (e.g., 404.html)"
+  type        = string
+  default     = "404.html"
+}
+2. Deploy Infrastructure
+Run the following Terraform commands to deploy the static website infrastructure.
 
-- [modules](https://github.com/gruntwork-io/terraform-google-static-assets/blob/master/modules): This folder contains the main implementation code for this Module.
+Initialize Terraform:
 
-  The primary modules are:
+bash
 
-  - [cloud-storage-static-website](https://github.com/gruntwork-io/terraform-google-static-assets/blob/master/modules/cloud-storage-static-website):
-    The Cloud Storage Static Website module is used to create a [Google Cloud Storage](https://cloud.google.com/storage/)
-    bucket that can be used to host a [static website](https://cloud.google.com/storage/docs/hosting-static-website).
+terraform init
+Plan the Deployment:
 
-  - [http-load-balancer-website](https://github.com/gruntwork-io/terraform-google-static-assets/blob/master/modules/http-load-balancer-website):
-    The HTTP Load Balancer Website module is used to create a [HTTP Load Balancer](https://cloud.google.com/load-balancing/docs/https/)
-    that routes requests to a [Google Cloud Storage](https://cloud.google.com/storage/) bucket for static content hosting,
-    allowing you to also configure SSL with a custom domain name.
+bash
 
-- [examples](https://github.com/gruntwork-io/terraform-google-static-assets/blob/master/examples): This folder contains examples of how to use the submodules.
+terraform plan
+Apply the Configuration:
 
-- [test](https://github.com/gruntwork-io/terraform-google-static-assets/blob/master/test): Automated tests for the submodules and examples.
+bash
 
-## Who maintains this Module?
+terraform apply -auto-approve
+3. Upload Website Content
+The static content for the website (e.g., index.html, 404.html) needs to be uploaded to the GCS bucket. Terraform automates this upload:
 
-This Module and its Submodules are maintained by [Gruntwork](http://www.gruntwork.io/). Read the [Gruntwork Philosophy](/GRUNTWORK_PHILOSOPHY.md) document to learn more about how Gruntwork builds production grade infrastructure code. If you are looking for help or commercial support, send an email to
-[support@gruntwork.io](mailto:support@gruntwork.io?Subject=Google%20Static%20Assets%20Module).
+hcl
 
-Gruntwork can help with:
+resource "google_storage_bucket_object" "index" {
+  name    = var.index_page
+  content = file("index.html")
+  bucket  = module.static_site.website_bucket_name
+  metadata = {
+    "Cache-Control" = "no-cache, max-age=0"
+  }
+}
+This configuration ensures that the website is served with minimal caching, allowing immediate updates.
 
-- Setup, customization, and support for this Module.
-- Modules and submodules for other types of infrastructure, such as VPCs, Docker clusters, databases, and continuous
-  integration.
-- Modules and Submodules that meet compliance requirements, such as HIPAA.
-- Consulting & Training on GCP, AWS, Terraform, and DevOps.
+Key Resources Created
+Google Cloud Storage Bucket: Holds the static website files.
+Cloud CDN: Configures HTTPS and speeds up content delivery.
+Cloud DNS: Manages DNS for the custom domain.
+Cache Management
+To ensure the latest content is visible, purge the Cloud CDN cache if updates are not reflected immediately:
 
-## How do I contribute to this Module?
+bash
 
-Contributions are very welcome! Check out the [Contribution Guidelines](https://github.com/gruntwork-io/terraform-google-static-assets/blob/master/CONTRIBUTING.md) for instructions.
-
-## How is this Module versioned?
-
-This Module follows the principles of [Semantic Versioning](http://semver.org/). You can find each new release, along
-with the changelog, in the [Releases Page](https://github.com/gruntwork-io/terraform-google-static-assets/releases).
-
-During initial development, the major version will be 0 (e.g., `0.x.y`), which indicates the code does not yet have a stable API. Once we hit `1.0.0`, we will make every effort to maintain a backwards compatible API and use the MAJOR, MINOR, and PATCH versions on each release to indicate any incompatibilities.
-
-## License
-
-Please see [LICENSE.txt](https://github.com/gruntwork-io/terraform-google-static-assets/blob/master/LICENSE.txt) for details on how the code in this repo is licensed.
+gcloud compute url-maps invalidate-cdn-cache [URL_MAP_NAME] --path "/*"
+Troubleshooting
+Cache Issues: Use the cache invalidation command above to force refresh content.
+Access Issues: Ensure public access is granted to the bucket objects.
+DNS Propagation: Allow time for DNS changes to propagate.
+Additional Notes
+Security: The bucket is publicly accessible. For private deployments, consider using signed URLs.
+Cost Management: Be aware of Cloud CDN and Cloud DNS costs, especially when testing.
