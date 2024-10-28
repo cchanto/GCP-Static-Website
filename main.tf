@@ -1,8 +1,4 @@
 terraform {
-
-
-
-  
   required_providers {
     google = {
       source  = "hashicorp/google"
@@ -11,13 +7,6 @@ terraform {
   }
 }
 
-data "terraform_remote_state" "foo" {
-  backend = "gcs"
-  config = {
-    bucket  = "webstatictf"
-    prefix  = "poc"
-  }
-}
 
 
 provider "google" {
