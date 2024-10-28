@@ -1,0 +1,15 @@
+# Exclude Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Exclude Terraform plan output files
+*.tfplan
+
+# Exclude Google Cloud key file
+gcloud-key.json
+
+# Exclude Google Cloud SDK directory and its contents
+google-cloud-sdk/
+
+# Exclude macOS specific files
+.DS_Store
