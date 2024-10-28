@@ -2,42 +2,11 @@ locals {
   website_domain_name_dashed = replace(var.website_domain_name, ".", "-")
 }
 
-# Load Balancer Module
-module "load_balancer" {
-  source                = "gruntwork-io/load-balancer/google"
-  name                  = local.website_domain_name_dashed
-  project               = var.project
-  url_map               = google_compute_url_map.urlmap.self_link
-  create_dns_entries    = var.create_dns_entry
-  custom_domain_names   = [var.website_domain_name]
-  dns_managed_zone_name = var.dns_managed_zone_name
-  dns_record_ttl        = var.dns_record_ttl
-  enable_http           = var.enable_http
-  enable_ssl            = var.enable_ssl
-  ssl_certificates      = [var.ssl_certificate]
-  custom_labels         = var.custom_labels
+# Allocate a Global IP Address for Load Balancer
+resource "google_compute_global_address" "static_ip" {
+  name    = "${local.website_domain_name_dashed}-ip"
+  project = var.project
 }
-
-# URL Map for Load Balancer
-resource "google_compute_url_map" "urlmap" {
-  provider    = google-beta
-  project     = var.project
-  name        = "${local.website_domain_name_dashed}-url-map"
-  description = "URL map for ${local.website_domain_name_dashed}"
-  default_service = google_compute_backend_bucket.static.self_link
- }
-
-resource "google_compute_backend_bucket" "static" {
-  provider    = google-beta
-  project     = var.project
-  name        = "${local.website_domain_name_dashed}-bucket"
-  bucket_name = module.site_bucket.website_bucket_name
-  enable_cdn  = var.enable_cdn
-  
-
-}
-
-
 
 # Backend Bucket with CDN Enabled
 resource "google_compute_backend_bucket" "static" {
@@ -47,13 +16,50 @@ resource "google_compute_backend_bucket" "static" {
   bucket_name = module.site_bucket.website_bucket_name
   enable_cdn  = var.enable_cdn
 
-    cdn_policy {
-    cache_mode             = "CACHE_ALL_STATIC"  # Caches only static content
-    client_ttl             = 60                  # Cache in client browsers for 1 minute
-    default_ttl            = 60                  # Default TTL of 1 minute for cached content
-    max_ttl                = 300                 # Maximum TTL of 5 minutes
-    serve_while_stale      = 60                  # Serve stale content for 1 minute if origin fails
+  cdn_policy {
+    cache_mode        = "CACHE_ALL_STATIC"  # Caches only static content
+    client_ttl        = 60                  # Cache in client browsers for 1 minute
+    default_ttl       = 60                  # Default TTL of 1 minute for cached content
+    max_ttl           = 300                 # Maximum TTL of 5 minutes
+    serve_while_stale = 60                  # Serve stale content for 1 minute if origin fails
   }
+}
+
+# URL Map for Load Balancer to Route Requests to Backend Bucket
+resource "google_compute_url_map" "url_map" {
+  provider        = google-beta
+  project         = var.project
+  name            = "${local.website_domain_name_dashed}-url-map"
+  default_service = google_compute_backend_bucket.static.self_link
+}
+
+# HTTPS Target Proxy
+resource "google_compute_target_https_proxy" "https_proxy" {
+  provider         = google-beta
+  project          = var.project
+  name             = "${local.website_domain_name_dashed}-https-proxy"
+  url_map          = google_compute_url_map.url_map.self_link
+  ssl_certificates = [var.ssl_certificate]  # SSL certificate variable
+}
+
+# HTTPS Forwarding Rule
+resource "google_compute_global_forwarding_rule" "https_forwarding_rule" {
+  provider    = google-beta
+  project     = var.project
+  name        = "${local.website_domain_name_dashed}-https-forwarding-rule"
+  target      = google_compute_target_https_proxy.https_proxy.self_link
+  ip_address  = google_compute_global_address.static_ip.address
+  port_range  = "443"
+}
+
+# DNS Record for Static Site (CNAME or A Record based on requirements)
+resource "google_dns_record_set" "dns_record" {
+  count        = var.create_dns_entry ? 1 : 0
+  name         = "${var.website_domain_name}."
+  managed_zone = var.dns_managed_zone_name
+  type         = var.enable_ssl ? "A" : "CNAME"
+  ttl          = var.dns_record_ttl
+  rrdatas      = var.enable_ssl ? [google_compute_global_address.static_ip.address] : ["c.storage.googleapis.com"]
 }
 
 # Site Bucket Module for GCS Hosting
@@ -81,23 +87,3 @@ module "site_bucket" {
   create_dns_entry                   = false
   custom_labels                      = var.custom_labels
 }
-
-# # DNS Record - CNAME for Static Site
-# resource "google_dns_record_set" "cname_record" {
-#   count        = var.enable_ssl && var.create_dns_entry ? 1 : 0
-#   name         = "${var.website_domain_name}."
-#   managed_zone = var.dns_managed_zone_name
-#   type         = "CNAME"
-#   ttl          = var.dns_record_ttl
-#   rrdatas      = [module.site_bucket.website_url] # Point to the GCS bucket URL
-# }
-
-# # DNS Record - A Record for IP if Load Balancer is Used
-# resource "google_dns_record_set" "a_record" {
-#   count        = var.enable_http && var.create_dns_entry ? 1 : 0
-#   name         = "${var.website_domain_name}."
-#   managed_zone = var.dns_managed_zone_name
-#   type         = "A"
-#   ttl          = var.dns_record_ttl
-#   rrdatas      = [module.load_balancer.load_balancer_ip] # Point to Load Balancer IP
-# }
