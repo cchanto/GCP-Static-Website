@@ -14,6 +14,16 @@ provider "google" {
   region  = "us-central1"
 }
 
+# Retrieve remote state data from another environment
+data "terraform_remote_state" "foo" {
+  backend = "gcs"
+  config = {
+    bucket  = "webstaticpoc"
+    prefix  = "poc"
+  }
+}
+
+
 module "static_site" {
   source = "./modules/cloud-storage-static-website"
 
