@@ -62,7 +62,7 @@ resource "google_storage_bucket" "website" {
 resource "google_storage_default_object_acl" "website_acl" {
   provider    = google-beta
   bucket      = google_storage_bucket.website.name
-  #role_entity = var.website_acls
+ 
   role_entity = ["READER:allUsers"]
 }
 
