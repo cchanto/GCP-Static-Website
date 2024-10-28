@@ -77,7 +77,8 @@ resource "google_storage_bucket" "access_logs" {
   location      = var.website_location
   storage_class = var.website_storage_class
 
-  force_destroy = var.force_destroy_access_logs_bucket
+  #force_destroy = var.force_destroy_access_logs_bucket
+  force_destroy = true
 
   dynamic "encryption" {
     for_each = local.access_log_kms_keys
