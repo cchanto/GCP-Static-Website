@@ -50,7 +50,7 @@ resource "google_storage_bucket_object" "index" {
 # Existing not_found bucket object with Cache-Control headers
 resource "google_storage_bucket_object" "not_found" {
   name    = var.not_found_page
-  content = "Uh oh"
+  content = "Uh oh test1"
   bucket  = module.static_site.website_bucket_name
   metadata = {
     "Cache-Control" = "no-cache, max-age=0"
