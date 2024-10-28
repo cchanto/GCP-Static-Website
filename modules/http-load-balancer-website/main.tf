@@ -64,22 +64,22 @@ module "site_bucket" {
   custom_labels                      = var.custom_labels
 }
 
-# # DNS Record - CNAME for Static Site
-# resource "google_dns_record_set" "cname_record" {
-#   count        = var.enable_ssl && var.create_dns_entry ? 1 : 0
-#   name         = "${var.website_domain_name}."
-#   managed_zone = var.dns_managed_zone_name
-#   type         = "CNAME"
-#   ttl          = var.dns_record_ttl
-#   rrdatas      = [module.site_bucket.website_url] # Point to the GCS bucket URL
-# }
+# DNS Record - CNAME for Static Site
+resource "google_dns_record_set" "cname_record" {
+  count        = var.enable_ssl && var.create_dns_entry ? 1 : 0
+  name         = "${var.website_domain_name}."
+  managed_zone = var.dns_managed_zone_name
+  type         = "CNAME"
+  ttl          = var.dns_record_ttl
+  rrdatas      = [module.site_bucket.website_url] # Point to the GCS bucket URL
+}
 
-# # DNS Record - A Record for IP if Load Balancer is Used
-# resource "google_dns_record_set" "a_record" {
-#   count        = var.enable_http && var.create_dns_entry ? 1 : 0
-#   name         = "${var.website_domain_name}."
-#   managed_zone = var.dns_managed_zone_name
-#   type         = "A"
-#   ttl          = var.dns_record_ttl
-#   rrdatas      = [module.load_balancer.load_balancer_ip] # Point to Load Balancer IP
-# }
+# DNS Record - A Record for IP if Load Balancer is Used
+resource "google_dns_record_set" "a_record" {
+  count        = var.enable_http && var.create_dns_entry ? 1 : 0
+  name         = "${var.website_domain_name}."
+  managed_zone = var.dns_managed_zone_name
+  type         = "A"
+  ttl          = var.dns_record_ttl
+  rrdatas      = [module.load_balancer.load_balancer_ip] # Point to Load Balancer IP
+}
