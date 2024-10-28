@@ -1,4 +1,8 @@
 terraform {
+  backend "gcs" {
+    bucket  = "poc-test-infra"
+    prefix  = "poc"
+  }
   required_providers {
     google = {
       source  = "hashicorp/google"
