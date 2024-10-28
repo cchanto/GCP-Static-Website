@@ -1,9 +1,7 @@
 terraform {
-  # Uncomment and configure backend if needed
-  backend "gcs" {
-    bucket = "webstatictf"  # Replace with your bucket name
-    prefix = "terraform/state"  # Optional: path within the bucket
-  }
+
+
+
   
   required_providers {
     google = {
@@ -12,6 +10,15 @@ terraform {
     }
   }
 }
+
+data "terraform_remote_state" "foo" {
+  backend = "gcs"
+  config = {
+    bucket  = "webstatictf"
+    prefix  = "poc"
+  }
+}
+
 
 provider "google" {
   project = var.project
