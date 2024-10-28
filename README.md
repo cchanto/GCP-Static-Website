@@ -1,7 +1,7 @@
-# Static Website Deployment on Google Cloud with Terraform
+## Static Website Deployment on Google Cloud with Terraform
 This project demonstrates how to deploy a static website on Google Cloud Storage (GCS) with HTTPS using Cloud CDN and Google Cloud DNS. Infrastructure as Code (IaC) is managed using Terraform to automate the deployment process.
 
-# Project Overview
+## Project Overview
 Website Hosting: The static website is hosted in a GCS bucket.
 HTTPS: Configured with Cloud CDN and SSL certificates for secure access.
 DNS: Cloud DNS is set up for a custom domain.
@@ -14,18 +14,27 @@ Architecture
 Google Cloud Storage (GCS): Hosts the static website files.
 Cloud CDN: Provides content caching and HTTPS.
 Cloud DNS: Manages the custom domain for the website.
-# Directory Structure
+## Directory Structure
 
 
 project-root/
 ├── main.tf                   
+├── variables.tf              # Defines project-level variables
+├── outputs.tf                # Defines root-level outputs
+├── index.py                  # Python script for additional tasks
 ├── modules/
-│   └── cloud-storage-static-website/ # Module for GCS setup
+│   ├── cloud-storage-static-website/  # Module for GCS setup
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   └── https-load-balancer-website/   # Module for HTTPS Load Balancer setup
 │       ├── main.tf
 │       ├── variables.tf
 │       └── outputs.tf
 ├── index.html                
-└── README.md                
+└── README.md  
+
+          
 # Setup & Configuration
 1. Configure Google Cloud Project and Variables
 Define the necessary variables in variables.tf or using environment variables in Terraform.
