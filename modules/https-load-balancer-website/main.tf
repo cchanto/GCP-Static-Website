@@ -1,5 +1,3 @@
-
-
 locals {
   website_domain_name_dashed = replace(var.website_domain_name, ".", "-")
 }
@@ -27,12 +25,12 @@ resource "google_compute_url_map" "urlmap" {
   name        = "${local.website_domain_name_dashed}-url-map"
   description = "URL map for ${local.website_domain_name_dashed}"
   default_service = google_compute_backend_bucket.static.self_link
-}
+ }
 
 resource "google_compute_backend_bucket" "static" {
   provider    = google-beta
   project     = var.project
-  name        = local.website_domain_name_dashed
+  name        = "${local.website_domain_name_dashed}-bucket"
   bucket_name = module.site_bucket.website_bucket_name
   enable_cdn  = var.enable_cdn
   
