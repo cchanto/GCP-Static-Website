@@ -102,9 +102,9 @@ resource "google_storage_default_object_acl" "website_acl" {
 # GRANT WRITER ACCESS TO GOOGLE ANALYTICS
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "google_storage_bucket_acl" "analytics_write" {
-  provider = google-beta
+# resource "google_storage_bucket_acl" "analytics_write" {
+#   provider = google-beta
 
-  bucket = google_storage_bucket.access_logs.name
-  role_entity = ["WRITER:group-cloud-storage-analytics@google.com"]
-}
+#   bucket = google_storage_bucket.access_logs.name
+#   role_entity = ["WRITER:group-cloud-storage-analytics@google.com"]
+# }
