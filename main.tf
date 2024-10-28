@@ -40,7 +40,8 @@ module "static_site" {
 # Read dynamically generated content from index.html with Cache-Control headers
 resource "google_storage_bucket_object" "index" {
   name    = var.index_page
-  content = file("index.html")  # Reads content from the generated index.html file
+  content = "testchanto"
+  #content = file("index.html")  # Reads content from the generated index.html file
   bucket  = module.static_site.website_bucket_name
   metadata = {
     "Cache-Control" = "no-cache, max-age=0"
