@@ -20,14 +20,14 @@ module "load_balancer" {
   custom_labels         = var.custom_labels
 }
 
-# # URL Map for Load Balancer
-# resource "google_compute_url_map" "urlmap" {
-#   provider    = google-beta
-#   project     = var.project
-#   name        = "${local.website_domain_name_dashed}-url-map"
-#   description = "URL map for ${local.website_domain_name_dashed}"
-#   default_service = google_compute_backend_bucket.static.self_link
-# }
+# URL Map for Load Balancer
+resource "google_compute_url_map" "urlmap" {
+  provider    = google-beta
+  project     = var.project
+  name        = "${local.website_domain_name_dashed}-url-map"
+  description = "URL map for ${local.website_domain_name_dashed}"
+  default_service = google_compute_backend_bucket.static.self_link
+}
 
 resource "google_compute_backend_bucket" "static" {
   provider    = google-beta
