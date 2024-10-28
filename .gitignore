@@ -10,6 +10,9 @@ gcloud-key.json
 
 # Exclude Google Cloud SDK directory and its contents
 google-cloud-sdk/
-./terraform/
+
+# Exclude Terraform modules directory
+.terraform/
+
 # Exclude macOS specific files
 .DS_Store
