@@ -50,11 +50,11 @@ resource "google_storage_bucket" "website" {
     }
   }
 
-  labels = var.custom_labels
-  logging {
-    log_bucket        = google_storage_bucket.access_logs.name
-    log_object_prefix = var.access_log_prefix != "" ? var.access_log_prefix : local.website_domain_name_dashed
-  }
+  # labels = var.custom_labels
+  # logging {
+  #   log_bucket        = google_storage_bucket.access_logs.name
+  #   log_object_prefix = var.access_log_prefix != "" ? var.access_log_prefix : local.website_domain_name_dashed
+  # }
 }
 
 
