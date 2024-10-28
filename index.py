@@ -10,7 +10,7 @@ index_content = """
     <title>Welcome</title>
 </head>
 <body>
-    <h1>Hello, World! 43 </h1>
+    <h1>Hello, World! </h1>
     <p>This content was dynamically generated with Python.</p>
 </body>
 </html>
