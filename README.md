@@ -1,7 +1,7 @@
-Static Website Deployment on Google Cloud with Terraform
+# Static Website Deployment on Google Cloud with Terraform
 This project demonstrates how to deploy a static website on Google Cloud Storage (GCS) with HTTPS using Cloud CDN and Google Cloud DNS. Infrastructure as Code (IaC) is managed using Terraform to automate the deployment process.
 
-Project Overview
+# Project Overview
 Website Hosting: The static website is hosted in a GCS bucket.
 HTTPS: Configured with Cloud CDN and SSL certificates for secure access.
 DNS: Cloud DNS is set up for a custom domain.
@@ -14,23 +14,22 @@ Architecture
 Google Cloud Storage (GCS): Hosts the static website files.
 Cloud CDN: Provides content caching and HTTPS.
 Cloud DNS: Manages the custom domain for the website.
-Directory Structure
-graphql
+# Directory Structure
+
 
 project-root/
-├── main.tf                   # Root Terraform configuration
+├── main.tf                   
 ├── modules/
 │   └── cloud-storage-static-website/ # Module for GCS setup
 │       ├── main.tf
 │       ├── variables.tf
 │       └── outputs.tf
-├── index.html                # Static HTML file for the website
-└── README.md                 # Project documentation
-Setup & Configuration
+├── index.html                
+└── README.md                
+# Setup & Configuration
 1. Configure Google Cloud Project and Variables
 Define the necessary variables in variables.tf or using environment variables in Terraform.
 
-hcl
 
 variable "project" {
   description = "The Google Cloud Project ID"
@@ -91,14 +90,14 @@ resource "google_storage_bucket_object" "index" {
 }
 This configuration ensures that the website is served with minimal caching, allowing immediate updates.
 
-Key Resources Created
+# Key Resources Created
 Google Cloud Storage Bucket: Holds the static website files.
 Cloud CDN: Configures HTTPS and speeds up content delivery.
 Cloud DNS: Manages DNS for the custom domain.
 Cache Management
 To ensure the latest content is visible, purge the Cloud CDN cache if updates are not reflected immediately:
 
-bash
+
 
 gcloud compute url-maps invalidate-cdn-cache [URL_MAP_NAME] --path "/*"
 Troubleshooting
