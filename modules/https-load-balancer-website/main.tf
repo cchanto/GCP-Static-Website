@@ -32,7 +32,7 @@ resource "google_compute_url_map" "urlmap" {
 resource "google_compute_backend_bucket" "static" {
   provider    = google-beta
   project     = var.project
-  name        = "${local.website_domain_name_dashed}-bucket"
+  name        = local.website_domain_name_dashed
   bucket_name = module.site_bucket.website_bucket_name
   enable_cdn  = var.enable_cdn
   
