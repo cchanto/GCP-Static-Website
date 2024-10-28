@@ -1,27 +1,17 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DEPLOY A STATIC SITE WITH HTTP CLOUD LOAD BALANCER
-# This module deploys a HTTP Load Balancer that directs traffic to Cloud Storage Bucket
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 terraform {
-  # This module is now only being tested with Terraform 1.0.x. However, to make upgrading easier, we are setting
-  # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
-  # forwards compatible with 1.0.x code.
+
   required_version = ">= 0.12.26"
 }
 
-# ------------------------------------------------------------------------------
-# PREPARE COMMONLY USED LOCALS
-# ------------------------------------------------------------------------------
-
 locals {
-  # We have to use dashes instead of dots in the bucket name, because
-  # that bucket is not a website
+
   website_domain_name_dashed = replace(var.website_domain_name, ".", "-")
 }
 
 module "load_balancer" {
-  source = "github.com/gruntwork-io/terraform-google-load-balancer.git//modules/http-load-balancer?ref=v0.3.0"
+  #source = "github.com/gruntwork-io/terraform-google-load-balancer.git//modules/http-load-balancer?ref=v0.3.0"
+  source = "gruntwork-io/load-balancer/google"
 
   name                  = local.website_domain_name_dashed
   project               = var.project
@@ -36,9 +26,6 @@ module "load_balancer" {
   custom_labels         = var.custom_labels
 }
 
-# ------------------------------------------------------------------------------
-# CREATE THE URL MAP WITH THE BACKEND BUCKET AS DEFAULT SERVICE
-# ------------------------------------------------------------------------------
 
 resource "google_compute_url_map" "urlmap" {
   provider = google-beta
@@ -50,9 +37,6 @@ resource "google_compute_url_map" "urlmap" {
   default_service = google_compute_backend_bucket.static.self_link
 }
 
-# ------------------------------------------------------------------------------
-# CREATE THE BACKEND BUCKET
-# ------------------------------------------------------------------------------
 
 resource "google_compute_backend_bucket" "static" {
   provider = google-beta
@@ -63,9 +47,7 @@ resource "google_compute_backend_bucket" "static" {
   enable_cdn  = var.enable_cdn
 }
 
-# ------------------------------------------------------------------------------
-# CREATE CLOUD STORAGE BUCKET FOR CONTENT AND ACCESS LOGS
-# ------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 module "site_bucket" {
   source = "../cloud-storage-static-website"
@@ -96,7 +78,7 @@ module "site_bucket" {
   cors_methods         = var.cors_methods
   cors_origins         = var.cors_origins
 
-  # We don't want a separate CNAME entry
+
   create_dns_entry = false
 
   custom_labels = var.custom_labels

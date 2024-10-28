@@ -1,7 +1,3 @@
-# ---------------------------------------------------------------------------------------------------------------------
-# REQUIRED PARAMETERS
-# These variables are expected to be passed in by the operator
-# ---------------------------------------------------------------------------------------------------------------------
 
 variable "project" {
   description = "The project ID to host the site in."
@@ -13,10 +9,7 @@ variable "website_domain_name" {
   type        = string
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-# OPTIONAL MODULE PARAMETERS
-# These variables have defaults, but may be overridden by the operator.
-# ---------------------------------------------------------------------------------------------------------------------
+
 variable "website_location" {
   description = "Location of the bucket that will store the static website. Once a bucket has been created, its location can't be changed. See https://cloud.google.com/storage/docs/bucket-locations"
   type        = string
