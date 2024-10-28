@@ -2,7 +2,7 @@ terraform {
   # Uncomment and configure backend if needed
   backend "gcs" {
     bucket = "webstatictf"  # Replace with your bucket name
-    # prefix = "terraform/state"  # Optional: path within the bucket
+    prefix = "terraform/state"  # Optional: path within the bucket
   }
   
   required_providers {
