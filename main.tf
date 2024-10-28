@@ -30,7 +30,7 @@ module "static_site" {
   project                       = var.project
   website_domain_name           = var.website_domain_name
   website_location              = var.website_location
-  force_destroy_access_logs_bucket = var.force_destroy_access_logs_bucket
+  #force_destroy_access_logs_bucket = var.force_destroy_access_logs_bucket
   force_destroy_website         = var.force_destroy_website
   create_dns_entry              = var.create_dns_entry
   dns_record_ttl                = var.dns_record_ttl
