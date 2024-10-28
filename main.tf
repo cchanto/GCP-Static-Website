@@ -79,3 +79,4 @@ resource "google_storage_bucket_iam_binding" "public_access" {
   role   = "roles/storage.objectViewer"
   members = ["allUsers"]
 }
+

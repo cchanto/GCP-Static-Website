@@ -36,13 +36,7 @@ resource "google_compute_backend_bucket" "static" {
   bucket_name = module.site_bucket.website_bucket_name
   enable_cdn  = var.enable_cdn
   
-  cdn_policy {
-    cache_mode             = "CACHE_ALL_STATIC"  # Caches only static content
-    client_ttl             = 60                  # Cache in client browsers for 1 minute
-    default_ttl            = 60                  # Default TTL of 1 minute for cached content
-    max_ttl                = 300                 # Maximum TTL of 5 minutes
-    serve_while_stale      = 60                  # Serve stale content for 1 minute if origin fails
-  }
+
 }
 
 
@@ -54,6 +48,14 @@ resource "google_compute_backend_bucket" "static" {
   name        = "${local.website_domain_name_dashed}-bucket"
   bucket_name = module.site_bucket.website_bucket_name
   enable_cdn  = var.enable_cdn
+
+    cdn_policy {
+    cache_mode             = "CACHE_ALL_STATIC"  # Caches only static content
+    client_ttl             = 60                  # Cache in client browsers for 1 minute
+    default_ttl            = 60                  # Default TTL of 1 minute for cached content
+    max_ttl                = 300                 # Maximum TTL of 5 minutes
+    serve_while_stale      = 60                  # Serve stale content for 1 minute if origin fails
+  }
 }
 
 # Site Bucket Module for GCS Hosting
