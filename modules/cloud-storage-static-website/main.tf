@@ -67,44 +67,44 @@ resource "google_storage_default_object_acl" "website_acl" {
 
 
 
-resource "google_storage_bucket" "access_logs" {
-  provider = google-beta
+# resource "google_storage_bucket" "access_logs" {
+#   provider = google-beta
 
-  project = var.project
+#   project = var.project
 
 
-  name          = "${local.website_domain_name_dashed}-logs"
-  location      = var.website_location
-  storage_class = var.website_storage_class
+#   name          = "${local.website_domain_name_dashed}-logs"
+#   location      = var.website_location
+#   storage_class = var.website_storage_class
 
-  force_destroy = var.force_destroy_access_logs_bucket
+#   force_destroy = var.force_destroy_access_logs_bucket
 
-  dynamic "encryption" {
-    for_each = local.access_log_kms_keys
-    content {
-      default_kms_key_name = encryption.value
-    }
-  }
+#   dynamic "encryption" {
+#     for_each = local.access_log_kms_keys
+#     content {
+#       default_kms_key_name = encryption.value
+#     }
+#   }
 
-  lifecycle_rule {
-    action {
-      type = "Delete"
-    }
+#   lifecycle_rule {
+#     action {
+#       type = "Delete"
+#     }
 
-    condition {
-      age = var.access_logs_expiration_time_in_days
-    }
-  }
-  labels = var.custom_labels
-}
+#     condition {
+#       age = var.access_logs_expiration_time_in_days
+#     }
+#   }
+#   labels = var.custom_labels
+# }
 
-# ---------------------------------------------------------------------------------------------------------------------
-# GRANT WRITER ACCESS TO GOOGLE ANALYTICS
-# ---------------------------------------------------------------------------------------------------------------------
+# # ---------------------------------------------------------------------------------------------------------------------
+# # GRANT WRITER ACCESS TO GOOGLE ANALYTICS
+# # ---------------------------------------------------------------------------------------------------------------------
 
-resource "google_storage_bucket_acl" "analytics_write" {
-  provider = google-beta
+# resource "google_storage_bucket_acl" "analytics_write" {
+#   provider = google-beta
 
-  bucket = google_storage_bucket.access_logs.name
-  role_entity = ["WRITER:group-cloud-storage-analytics@google.com"]
-}
+#   bucket = google_storage_bucket.access_logs.name
+#   role_entity = ["WRITER:group-cloud-storage-analytics@google.com"]
+# }
