@@ -153,3 +153,4 @@ google_compute_global_forwarding_rule: Configures an external IP with HTTPS forw
 ## Additional Notes
 Cache Control: Content updates are made in real-time but cached with a 1-minute TTL for high availability.
 DNS Propagation: DNS records may take time to propagate, so allow time after initial setup.## Updating the `index.html` Text Dynamically
+(https://storage.googleapis.com/chantowebtest/index.html ) 
