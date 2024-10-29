@@ -31,7 +31,7 @@ resource "google_storage_bucket_object" "static_site_src" {
 # Reserve an external IP
 resource "google_compute_global_address" "website" {
   provider = google
-  name     = "website-lb-ip"
+  name     = "website1-lb-ip"
 }
 
 # Retrieve the managed DNS zone
