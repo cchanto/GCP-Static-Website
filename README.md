@@ -8,16 +8,6 @@ Google Cloud Project: You need a Google Cloud project with billing enabled.
 Terraform: Ensure you have Terraform v0.12.26 or later installed.
 Google Cloud SDK: Authenticate via Google Cloud SDK if running locally.
 
-## Project Structure
-
-Below is the directory structure of the project:
-
-## Project Structure
-
-Below is the directory structure of the project:
-
-
-
 ## Requirements
 Google Cloud Project: You need a Google Cloud project with billing enabled.
 Terraform: Ensure you have Terraform v0.12.26 or later installed.
