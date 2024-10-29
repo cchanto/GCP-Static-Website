@@ -1,5 +1,5 @@
 #variable "gcp_svc_key" {}
-variable "gcp_project" {
+variable "project_id" {
      default     = "poc-test-infra"
 }
 variable "gcp_region" {
