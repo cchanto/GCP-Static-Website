@@ -8,17 +8,23 @@ Google Cloud Project: You need a Google Cloud project with billing enabled.
 Terraform: Ensure you have Terraform v0.12.26 or later installed.
 Google Cloud SDK: Authenticate via Google Cloud SDK if running locally.
 
-## Directory Structure
+## Project Structure
 
+Below is the directory structure of the project:
 
+## Project Structure
+
+Below is the directory structure of the project:
+
+```plaintext
 project-root/
-├── infra/                     # Contains main infrastructure configurations
-│   ├── main.tf                # Main Terraform configuration
-│   ├── variables.tf           # Project-level variables used in main Terraform config
-│   └── outputs.tf             # Defines outputs from root configuration
-├── website/                   # Contains website content
-│   └── index.html             # HTML file to be deployed to GCS
-└── README.md                  # Documentation for setup and usage
+├── infra/                       # Contains Terraform infrastructure code
+│   ├── main.tf                  # Main configuration file
+│   ├── outputs.tf               # Output values for resources created
+│   └── variables.tf             # Input variables for configuration
+├── website/                     # Holds the website content
+│   └── index.html               # HTML file to deploy to GCP bucket
+└── README.md                    # Project documentation
 
           
 ## Requirements
