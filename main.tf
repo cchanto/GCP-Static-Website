@@ -20,7 +20,7 @@ variable "project_id" {
 
 module "storage" {
   source          = "./modules/storage"
-  bucket_name     = "chantowebtest1"
+  bucket_name     = "chantowebtestmodules"
   bucket_location = "US"
   project_id      = var.project_id  // Pass the project ID
 }
@@ -52,3 +52,10 @@ module "load_balancer" {
   websitepoc-target-proxy = var.target_proxy_name
 }
 
+
+
+variable "target_proxy_name" {
+  description = "The name of the target proxy"
+  type        = string
+  default     = "websitepoc-target-proxy"  # Provide a default value or set it in the root module's input variables
+}
