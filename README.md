@@ -1,127 +1,55 @@
-## Static Website Deployment on Google Cloud with Terraform
-This project demonstrates how to deploy a static website on Google Cloud Storage (GCS) with HTTPS using Cloud CDN and Google Cloud DNS. Infrastructure as Code (IaC) is managed using Terraform to automate the deployment process.
+# GCP Static Website
 
-## Project Overview
-Website Hosting: The static website is hosted in a GCS bucket.
-HTTPS: Configured with Cloud CDN and SSL certificates for secure access.
-DNS: Cloud DNS is set up for a custom domain.
-Caching: Cloud CDN is used to speed up content delivery, and cache settings are configurable.
-Prerequisites
-Google Cloud Account: A GCP account with necessary permissions (Storage Admin, Compute Admin, and DNS Admin).
-Terraform: Version 0.12+ is required.
-gcloud CLI: Set up and authenticated to manage Google Cloud resources.
-Architecture
-Google Cloud Storage (GCS): Hosts the static website files.
-Cloud CDN: Provides content caching and HTTPS.
-Cloud DNS: Manages the custom domain for the website.
-## Directory Structure
+## Overview
+
+This project sets up a static website hosted on Google Cloud Platform (GCP) using Terraform. The infrastructure includes a Google Cloud Storage bucket for static content, Cloud CDN for caching, and necessary networking components, such as a global IP address and DNS configuration.
+
+## Folder Structure
 
 
-project-root/
-├── main.tf                   
-├── variables.tf              # Defines project-level variables
-├── outputs.tf                # Defines root-level outputs
-├── index.py                  # Python script for additional tasks
-├── modules/
-│   ├── cloud-storage-static-website/  # Module for GCS setup
-│   │   ├── main.tf
-│   │   ├── variables.tf
-│   │   └── outputs.tf
-│   └── https-load-balancer-website/   # Module for HTTPS Load Balancer setup
-│       ├── main.tf
-│       ├── variables.tf
-│       └── outputs.tf
-├── index.html                
-└── README.md  
+## Requirements
 
-          
-# Setup & Configuration
-1. Configure Google Cloud Project and Variables
-Define the necessary variables in variables.tf or using environment variables in Terraform.
+- **Terraform**: Ensure you have [Terraform](https://www.terraform.io/downloads.html) installed on your machine.
+- **Google Cloud SDK**: Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) to interact with GCP.
+
+## Setup Instructions
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/yourusername/GCP-Static-Website.git
+   cd GCP-Static-Website
+
+   Configure Variables:
+
+Update the variables.tf file to set your GCP project ID and any other required variables.
 
 
-variable "project" {
-  description = "The Google Cloud Project ID"
-  type        = string
-}
+## Limitations
+Bucket Lock: The project does not implement bucket lock features due to the need for frequent recreations of the bucket.
+Region Limitations: Ensure that the selected regions for resources align with your project needs and any restrictions imposed by your organization.
+Scaling: The current setup does not include autoscaling configurations for handling high traffic loads.
+Cost Management: Be aware of the costs associated with using GCP resources, particularly with data transfer and storage.
+Security Best Practices
+IAM Roles: Ensure that the service account used for Terraform has the necessary IAM roles to create and manage resources.
+HTTPS: Use managed SSL certificates for secure communication over HTTPS.
+CORS Policy: Implement appropriate CORS policies on your Cloud Storage bucket if required.
+Network Security: Configure firewall rules to restrict access to only necessary IP ranges.
+Contributing
+Feel free to contribute to this project by submitting issues or pull requests. Your contributions are welcome!
 
-variable "website_domain_name" {
-  description = "Domain name for the website (e.g., example.com)"
-  type        = string
-}
+License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-variable "website_location" {
-  description = "Region for the GCS bucket (e.g., US)"
-  type        = string
-}
-
-variable "index_page" {
-  description = "Name of the main page (e.g., index.html)"
-  type        = string
-  default     = "index.html"
-}
-
-variable "not_found_page" {
-  description = "Name of the 404 page (e.g., 404.html)"
-  type        = string
-  default     = "404.html"
-}
-2. Deploy Infrastructure
-Run the following Terraform commands to deploy the static website infrastructure.
-
-Initialize Terraform:
-
-bash
-
-terraform init
-Plan the Deployment:
-
-bash
-
-terraform plan
-Apply the Configuration:
-
-bash
-
-terraform apply -auto-approve
-3. Upload Website Content
-The static content for the website (e.g., index.html, 404.html) needs to be uploaded to the GCS bucket. Terraform automates this upload:
-
-hcl
-
-resource "google_storage_bucket_object" "index" {
-  name    = var.index_page
-  content = file("index.html")
-  bucket  = module.static_site.website_bucket_name
-  metadata = {
-    "Cache-Control" = "no-cache, max-age=0"
-  }
-}
-This configuration ensures that the website is served with minimal caching, allowing immediate updates.
-
-# Key Resources Created
-Google Cloud Storage Bucket: Holds the static website files.
-Cloud CDN: Configures HTTPS and speeds up content delivery.
-Cloud DNS: Manages DNS for the custom domain.
-Cache Management
-To ensure the latest content is visible, purge the Cloud CDN cache if updates are not reflected immediately:
+markdown
 
 
+### How to Use
 
-gcloud compute url-maps invalidate-cdn-cache [URL_MAP_NAME] --path "/*"
-Troubleshooting
-Cache Issues: Use the cache invalidation command above to force refresh content.
-Access Issues: Ensure public access is granted to the bucket objects.
-DNS Propagation: Allow time for DNS changes to propagate.
-Additional Notes
-Security: The bucket is publicly accessible. For private deployments, consider using signed URLs.
-Cost Management: Be aware of Cloud CDN and Cloud DNS costs, especially when testing.
+1. **Copy and Paste**: Copy the above content into a file named `README.md` in your project root directory.
+2. **Modify as Needed**: Adjust any project-specific details, such as the repository URL, additional instructions, or any other relevant information.
 
+This README provides a clear overview of your project and guidelines for users and contributors. Let me know if you need further modifications or additional sections!
 
-## Why Use a Python Script (index.py) to Update index.html?
-The Python script index.py plays a critical role in automating the content management process for the static website. Here are some reasons we chose to include and use it:
-
-Automated Content Updates:
-
-The index.py script generates the index.html file dynamically and uploads it to the GCS bucket. This approach makes it easy to update content on the website without manual file edits and re-uploading, which is especially useful if the content is expected to change periodically.
-By running this script, you can automate the content update process, ensuring that any changes made in index.html are quickly reflected in the GCS bucket and accessible via the HTTPS load balancer.
+```plaintext
+Structure 
+/GCP-Static-Website │ ├── /modules │ ├── /load_balancer │ │ ├── main.tf │ │ ├── variables.tf │ │ └── outputs.tf │ ├── /networking │ │ ├── main.tf │ │ ├── variables.tf │ │ └── outputs.tf │ ├── /ssl_certificate │ │ ├── main.tf │ │ ├── variables.tf │ │ └── outputs.tf │ └── /storage │ ├── main.tf │ ├── variables.tf │ └── outputs.tf │ ├── main.tf ├── variables.tf └── README.md
