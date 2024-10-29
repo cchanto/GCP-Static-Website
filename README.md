@@ -1,4 +1,4 @@
-# GCP Static Website
+# Static Website on Google Cloud with HTTPS Load Balancer
 
 ## Overview
 
