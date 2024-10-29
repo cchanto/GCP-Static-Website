@@ -16,17 +16,8 @@ Below is the directory structure of the project:
 
 Below is the directory structure of the project:
 
-```plaintext
-project-root/
-├── infra/                       # Contains Terraform infrastructure code
-│   ├── main.tf                  # Main configuration file
-│   ├── outputs.tf               # Output values for resources created
-│   └── variables.tf             # Input variables for configuration
-├── website/                     # Holds the website content
-│   └── index.html               # HTML file to deploy to GCP bucket
-└── README.md                    # Project documentation
 
-          
+
 ## Requirements
 Google Cloud Project: You need a Google Cloud project with billing enabled.
 Terraform: Ensure you have Terraform v0.12.26 or later installed.
@@ -160,3 +151,20 @@ google_compute_global_forwarding_rule: Configures an external IP with HTTPS forw
 Cache Control: Content updates are made in real-time but cached with a 1-minute TTL for high availability.
 DNS Propagation: DNS records may take time to propagate, so allow time after initial setup.## Updating the `index.html` Text Dynamically
 (https://storage.googleapis.com/chantowebtest/index.html ) 
+
+
+
+
+## Project Structure
+
+Below is the directory structure of the project:
+
+```plaintext
+project-root/
+├── infra/                       # Contains Terraform infrastructure code
+│   ├── main.tf                  # Main configuration file
+│   ├── outputs.tf               # Output values for resources created
+│   └── variables.tf             # Input variables for configuration
+├── website/                     # Holds the website content
+│   └── index.html               # HTML file to deploy to GCP bucket
+└── README.md                    # Project documentation
