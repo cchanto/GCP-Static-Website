@@ -20,7 +20,7 @@ resource "google_storage_object_access_control" "public_rule" {
 # Upload the HTML file to the bucket with Cache-Control header
 resource "google_storage_bucket_object" "static_site_src" {
   name   = "index.html"
-  source = "../website/index.html"  # Ensure this file exists
+  source = "/website/index.html"  # Ensure this file exists
   bucket = google_storage_bucket.website.name
 
   metadata = {
