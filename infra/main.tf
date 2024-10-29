@@ -17,11 +17,12 @@ resource "google_storage_object_access_control" "public_rule" {
   entity = "allUsers"
 }
 
-# Upload the html file to the bucket with Cache-Control header
+# Upload the HTML file to the bucket with Cache-Control header
 resource "google_storage_bucket_object" "static_site_src" {
   name   = "index.html"
-  source = "../website/index.html"
+  source = "../website/index.html"  # Ensure this file exists
   bucket = google_storage_bucket.website.name
+
   metadata = {
     "Cache-Control" = "no-cache, max-age=0"  # Forces CDN to revalidate every time
   }
@@ -31,13 +32,15 @@ resource "google_storage_bucket_object" "static_site_src" {
 # Reserve an external IP
 resource "google_compute_global_address" "website" {
   provider = google
-  name     = "website1-lb-ip"
+  name     = "website-lb-ip"
+  project  = var.project_id // Ensure project is set
 }
 
 # Retrieve the managed DNS zone
 data "google_dns_managed_zone" "gcp_coffeetime_dev" {
   provider = google
-  name     = "testchanto"
+  name     = "testchanto"  # Ensure this DNS zone exists
+  project  = var.project_id // Ensure project is set
 }
 
 # Add the IP to the DNS record
@@ -48,31 +51,32 @@ resource "google_dns_record_set" "website" {
   ttl          = 30
   managed_zone = data.google_dns_managed_zone.gcp_coffeetime_dev.name
   rrdatas      = [google_compute_global_address.website.address]
+  project      = var.project_id // Ensure project is set
 }
 
 # Backend bucket with CDN enabled and cache configuration
 resource "google_compute_backend_bucket" "website-backend" {
   provider    = google
   name        = "website-backend"
-  description = "Contains files needed by the website"
   bucket_name = google_storage_bucket.website.name
   enable_cdn  = true
+  project     = var.project_id // Ensure project is set
 
   cdn_policy {
     cache_mode        = "CACHE_ALL_STATIC"   # Cache only static content
     client_ttl        = 60                   # Client-side cache TTL: 1 minute
     default_ttl       = 60                   # Default TTL for cached objects: 1 minute
     max_ttl           = 60                   # Maximum cache TTL for objects: 1 minute
-    serve_while_stale = 60                # Serve stale content for 1 day if origin fails
+    serve_while_stale = 60                   # Serve stale content for 1 day if origin fails
 
     negative_caching = true
     negative_caching_policy {
       code = 404
-      ttl  = 30  # Cache 404 responses for 5 minutes
+      ttl  = 30  # Cache 404 responses for 30 seconds
     }
     negative_caching_policy {
       code = 410
-      ttl  = 30  # Cache 410 responses for 5 minutes
+      ttl  = 30  # Cache 410 responses for 30 seconds
     }
   }
 }
@@ -92,15 +96,15 @@ resource "google_compute_url_map" "website" {
   name            = "website-url-map"
   default_service = google_compute_backend_bucket.website-backend.self_link
 
-  # host_rule {
-  #   hosts        = ["*"]
-  #   path_matcher = "allpaths"
-  # }
+  path_matcher {
+    name            = "allpaths"
+    default_service = google_compute_backend_bucket.website-backend.self_link
 
-  # path_matcher {
-  #   name            = "allpaths"
-  #   default_service = google_compute_backend_bucket.website-backend.self_link
-  # }
+    path_rule {
+      paths   = ["/*"]  # Match all paths
+      service = google_compute_backend_bucket.website-backend.self_link  # Specify backend service
+    }
+  }
 }
 
 # HTTPS Target Proxy
@@ -109,6 +113,7 @@ resource "google_compute_target_https_proxy" "website" {
   name             = "website-target-proxy"
   url_map          = google_compute_url_map.website.self_link
   ssl_certificates = [google_compute_managed_ssl_certificate.website.self_link]
+  project          = var.project_id // Ensure project is set
 }
 
 # HTTPS Forwarding Rule
@@ -120,4 +125,35 @@ resource "google_compute_global_forwarding_rule" "default" {
   ip_protocol           = "TCP"  # Updated to TCP for compatibility
   port_range            = "443"
   target                = google_compute_target_https_proxy.website.self_link
+  project               = var.project_id // Ensure project is set
+}
+
+# Google Cloud Armor security policy
+resource "google_compute_security_policy" "web_security_policy" {
+  provider = google
+  name     = "web-security-policy"
+}
+
+# Security policy rule to deny traffic from specific IPs
+resource "google_compute_security_policy_rule" "deny_rule" {
+  provider        = google
+  security_policy = google_compute_security_policy.web_security_policy.id
+  priority        = 1000
+  match {
+    versioned_expr = "SRC_IPS_V1"
+    config {
+      src_ip_ranges = ["192.0.2.0/24"]  # Example IPs to block
+    }
+  }
+  action = "deny-403"  # Deny access for specific IPs
+}
+
+# Apply security policy to backend service
+resource "google_compute_backend_service" "website_backend" {
+  provider = google
+  name     = "website-backend-service"
+  backend {
+    group = google_compute_backend_bucket.website-backend.self_link
+  }
+  security_policy = google_compute_security_policy.web_security_policy.id
 }
