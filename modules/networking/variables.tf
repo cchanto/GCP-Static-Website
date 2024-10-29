@@ -2,7 +2,7 @@
         variable "global_address_name" {
           description = "Name for the reserved global IP address"
           type        = string
-          default     = "website1-lb-ip"
+          default     = "website2-lb-ip"
         }
 
         variable "dns_zone_name" {

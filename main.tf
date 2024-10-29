@@ -27,7 +27,7 @@ module "storage" {
 
 module "networking" {
   source              = "./modules/networking"
-  global_address_name = "website1-lb-ip"
+  global_address_name = "website2-lb-ip"
   dns_zone_name       = "testchanto"
   project_id          = var.project_id // Pass the project ID
 }
