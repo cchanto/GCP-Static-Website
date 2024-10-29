@@ -13,6 +13,10 @@ resource "google_storage_bucket" "website" {
   }
 }
 
+variable "project_id" {
+     default     = "poc-test-infra"
+}
+
 # Make new objects public
 resource "google_storage_object_access_control" "public_rule" {
   object = google_storage_bucket_object.static_site_src.output_name
