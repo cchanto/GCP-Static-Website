@@ -9,6 +9,7 @@ modules = {
           name          = var.bucket_name
           location      = var.bucket_location
           force_destroy = true
+          project       = var.project_id // Ensure project is set
 
           versioning {
             enabled = true
@@ -43,6 +44,11 @@ modules = {
           type        = string
           default     = "US"
         }
+
+        variable "project_id" {
+          description = "The GCP project ID"
+          type        = string
+        }
         """,
         "outputs.tf": """
         output "bucket_name" {
@@ -55,11 +61,13 @@ modules = {
         resource "google_compute_global_address" "website" {
           provider = google
           name     = var.global_address_name
+          project  = var.project_id // Ensure project is set
         }
 
         data "google_dns_managed_zone" "gcp_coffeetime_dev" {
           provider = google
           name     = var.dns_zone_name
+          project  = var.project_id // Ensure project is set
         }
 
         resource "google_dns_record_set" "website" {
@@ -69,6 +77,7 @@ modules = {
           ttl          = 30
           managed_zone = data.google_dns_managed_zone.gcp_coffeetime_dev.name
           rrdatas      = [google_compute_global_address.website.address]
+          project      = var.project_id // Ensure project is set
         }
         """,
         "variables.tf": """
@@ -80,6 +89,11 @@ modules = {
 
         variable "dns_zone_name" {
           description = "DNS Zone name"
+          type        = string
+        }
+
+        variable "project_id" {
+          description = "The GCP project ID"
           type        = string
         }
         """,
@@ -100,12 +114,14 @@ modules = {
           name        = var.backend_bucket_name
           bucket_name = var.bucket_name
           enable_cdn  = true
+          project     = var.project_id // Ensure project is set
         }
 
         resource "google_compute_url_map" "website" {
           provider        = google
           name            = var.url_map_name
           default_service = google_compute_backend_bucket.website-backend.self_link
+          project         = var.project_id // Ensure project is set
 
           path_matcher {
             name            = "allpaths"
@@ -118,6 +134,7 @@ modules = {
           name             = var.target_proxy_name
           url_map          = google_compute_url_map.website.self_link
           ssl_certificates = [var.ssl_certificate]
+          project          = var.project_id // Ensure project is set
         }
 
         resource "google_compute_global_forwarding_rule" "default" {
@@ -128,6 +145,7 @@ modules = {
           ip_protocol           = "TCP"
           port_range            = "443"
           target                = google_compute_target_https_proxy.website.self_link
+          project               = var.project_id // Ensure project is set
         }
         """,
         "variables.tf": """
@@ -169,6 +187,11 @@ modules = {
           description = "Global IP address for the load balancer"
           type        = string
         }
+
+        variable "project_id" {
+          description = "The GCP project ID"
+          type        = string
+        }
         """,
         "outputs.tf": """
         output "forwarding_rule" {
@@ -184,6 +207,7 @@ modules = {
           managed {
             domains = [var.domain_name]
           }
+          project = var.project_id // Ensure project is set
         }
         """,
         "variables.tf": """
@@ -194,6 +218,11 @@ modules = {
 
         variable "domain_name" {
           description = "Domain name for the SSL certificate"
+          type        = string
+        }
+
+        variable "project_id" {
+          description = "The GCP project ID"
           type        = string
         }
         """,
@@ -220,22 +249,30 @@ for module_name, files in modules.items():
 
 # Create main.tf file in the project root to call the modules
 main_tf_content = """
+variable "project_id" {
+  description = "The GCP project ID"
+  type        = string
+}
+
 module "storage" {
   source          = "./modules/storage"
   bucket_name     = "chantowebtest"
   bucket_location = "US"
+  project_id      = var.project_id // Pass the project ID
 }
 
 module "networking" {
   source              = "./modules/networking"
   global_address_name = "website-lb-ip"
   dns_zone_name       = "testchanto"
+  project_id          = var.project_id // Pass the project ID
 }
 
 module "ssl_certificate" {
   source               = "./modules/ssl_certificate"
   ssl_certificate_name = "website-cert"
   domain_name          = module.networking.dns_record
+  project_id          = var.project_id // Pass the project ID
 }
 
 module "load_balancer" {
@@ -247,6 +284,7 @@ module "load_balancer" {
   forwarding_rule_name = "website-forwarding-rule"
   ssl_certificate     = module.ssl_certificate.ssl_certificate_self_link
   global_address      = module.networking.global_ip_address
+  project_id          = var.project_id // Pass the project ID
 }
 """
 

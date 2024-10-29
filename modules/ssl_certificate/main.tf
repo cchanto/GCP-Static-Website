@@ -5,5 +5,6 @@
           managed {
             domains = [var.domain_name]
           }
+          project = var.project_id // Ensure project is set
         }
         
