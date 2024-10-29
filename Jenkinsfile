@@ -9,25 +9,7 @@ pipeline {
         BUCKET_NAME = 'chantowebtest' // Replace with your actual bucket name
     }
     stages {
-        stage('Terraform Init for Destroy') {
-            steps {
-                withCredentials([file(credentialsId: 'gcloud-creds', variable: 'GCLOUD_CREDS')]) {
-                    sh '''
-                    gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
-                    gcloud config set project $PROJECT_ID
-                    terraform -chdir=./infra init
-                    '''
-                }
-            }
-        }
 
-        stage('Terraform Destroy') {
-            steps {
-                sh '''
-                terraform -chdir=./infra destroy -auto-approve
-                '''
-            }
-        }
         stage('Cleanup Workspace') {
             steps {
                 script {
