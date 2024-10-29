@@ -1,127 +1,76 @@
-## Static Website Deployment on Google Cloud with Terraform
-This project demonstrates how to deploy a static website on Google Cloud Storage (GCS) with HTTPS using Cloud CDN and Google Cloud DNS. Infrastructure as Code (IaC) is managed using Terraform to automate the deployment process.
+## Static Website on Google Cloud with HTTPS Load Balancer
 
-## Project Overview
-Website Hosting: The static website is hosted in a GCS bucket.
-HTTPS: Configured with Cloud CDN and SSL certificates for secure access.
-DNS: Cloud DNS is set up for a custom domain.
-Caching: Cloud CDN is used to speed up content delivery, and cache settings are configurable.
-Prerequisites
-Google Cloud Account: A GCP account with necessary permissions (Storage Admin, Compute Admin, and DNS Admin).
-Terraform: Version 0.12+ is required.
-gcloud CLI: Set up and authenticated to manage Google Cloud resources.
-Architecture
-Google Cloud Storage (GCS): Hosts the static website files.
-Cloud CDN: Provides content caching and HTTPS.
-Cloud DNS: Manages the custom domain for the website.
+This Terraform configuration deploys a static website on Google Cloud Storage (GCS), served over HTTPS using a load balancer. The configuration includes automatic content caching, DNS settings, and public accessibility.
+
+
+## Requirements
+Google Cloud Project: You need a Google Cloud project with billing enabled.
+Terraform: Ensure you have Terraform v0.12.26 or later installed.
+Google Cloud SDK: Authenticate via Google Cloud SDK if running locally.
+
 ## Directory Structure
 
 
 project-root/
-├── main.tf                   
-├── variables.tf              # Defines project-level variables
-├── outputs.tf                # Defines root-level outputs
-├── index.py                  # Python script for additional tasks
-├── modules/
-│   ├── cloud-storage-static-website/  # Module for GCS setup
-│   │   ├── main.tf
-│   │   ├── variables.tf
-│   │   └── outputs.tf
-│   └── https-load-balancer-website/   # Module for HTTPS Load Balancer setup
-│       ├── main.tf
-│       ├── variables.tf
-│       └── outputs.tf
-├── index.html                
-└── README.md  
+├── infra/                     # Contains main infrastructure configurations
+│   ├── main.tf                # Main Terraform configuration
+│   ├── variables.tf           # Project-level variables used in main Terraform config
+│   └── outputs.tf             # Defines outputs from root configuration
+├── website/                   # Contains website content
+│   └── index.html             # HTML file to be deployed to GCS
+└── README.md                  # Documentation for setup and usage
 
           
-# Setup & Configuration
-1. Configure Google Cloud Project and Variables
-Define the necessary variables in variables.tf or using environment variables in Terraform.
+## Requirements
+Google Cloud Project: You need a Google Cloud project with billing enabled.
+Terraform: Ensure you have Terraform v0.12.26 or later installed.
+Google Cloud SDK: Authenticate via Google Cloud SDK if running locally.
 
+## Terraform Configuration Overview
+Resources Created
+-GCS Bucket: Stores static website content.
+-Google Compute Global Address: Reserves a global IP for the website.
+-DNS Record: Maps the reserved IP to the domain in Google Cloud DNS.
+-Google Compute Backend Bucket: Acts as a CDN-enabled backend for the load balancer.
+-SSL Certificate: Provides HTTPS access.
+-Load Balancer: Routes traffic to the GCS bucket over HTTPS.
 
-variable "project" {
-  description = "The Google Cloud Project ID"
-  type        = string
-}
+# Key Settings
+* Caching: CACHE_ALL_STATIC mode caches static content for optimized delivery.
+* Cache TTLs: Set to 1 minute by default to allow for real-time updates.
+* Negative Caching: Configures 404 and 410 responses to be cached for 5 minutes.
+* No Versioning: GCS bucket versioning is disabled for simplicity.
 
-variable "website_domain_name" {
-  description = "Domain name for the website (e.g., example.com)"
-  type        = string
-}
+## Setup
+#### Step 1: Initialize and Apply Terraform
+Set the GCP Project ID:
 
-variable "website_location" {
-  description = "Region for the GCS bucket (e.g., US)"
-  type        = string
-}
+Update the PROJECT_ID environment variable in your Terraform configuration.
+Run Terraform:
 
-variable "index_page" {
-  description = "Name of the main page (e.g., index.html)"
-  type        = string
-  default     = "index.html"
-}
+terraform -chdir=./infra init
+terraform -chdir=./infra apply -auto-approve
+This will create the GCS bucket, reserve an IP, configure DNS, set up caching, and deploy the HTTPS load balancer.
 
-variable "not_found_page" {
-  description = "Name of the 404 page (e.g., 404.html)"
-  type        = string
-  default     = "404.html"
-}
-2. Deploy Infrastructure
-Run the following Terraform commands to deploy the static website infrastructure.
-
-Initialize Terraform:
+### Step 2: Upload Content
+After deploying the infrastructure, upload the website content (e.g., index.html) to the GCS bucket:
 
 bash
+gsutil -h "Cache-Control:no-cache, max-age=0" cp ./website/index.html gs://chantowebtest
 
-terraform init
-Plan the Deployment:
+This command ensures that the CDN revalidates cached content on each request.
 
-bash
+### Step 3: Test the Deployment
+Public URL: The website should be accessible via the HTTPS load balancer using your custom domain.
+Content Refresh: Due to caching, changes to the content may take up to 1 minute to appear.
 
-terraform plan
-Apply the Configuration:
+## Configuration Details
+google_storage_bucket: Configures the GCS bucket to store website content with public access and caching policies.
+google_compute_backend_bucket: Enables CDN and cache policies for optimized performance.
+google_compute_managed_ssl_certificate: Automates SSL certificate management for HTTPS access.
+google_compute_url_map: Routes incoming traffic to the GCS bucket.
+google_compute_global_forwarding_rule: Configures an external IP with HTTPS forwarding.
 
-bash
-
-terraform apply -auto-approve
-3. Upload Website Content
-The static content for the website (e.g., index.html, 404.html) needs to be uploaded to the GCS bucket. Terraform automates this upload:
-
-hcl
-
-resource "google_storage_bucket_object" "index" {
-  name    = var.index_page
-  content = file("index.html")
-  bucket  = module.static_site.website_bucket_name
-  metadata = {
-    "Cache-Control" = "no-cache, max-age=0"
-  }
-}
-This configuration ensures that the website is served with minimal caching, allowing immediate updates.
-
-# Key Resources Created
-Google Cloud Storage Bucket: Holds the static website files.
-Cloud CDN: Configures HTTPS and speeds up content delivery.
-Cloud DNS: Manages DNS for the custom domain.
-Cache Management
-To ensure the latest content is visible, purge the Cloud CDN cache if updates are not reflected immediately:
-
-
-
-gcloud compute url-maps invalidate-cdn-cache [URL_MAP_NAME] --path "/*"
-Troubleshooting
-Cache Issues: Use the cache invalidation command above to force refresh content.
-Access Issues: Ensure public access is granted to the bucket objects.
-DNS Propagation: Allow time for DNS changes to propagate.
-Additional Notes
-Security: The bucket is publicly accessible. For private deployments, consider using signed URLs.
-Cost Management: Be aware of Cloud CDN and Cloud DNS costs, especially when testing.
-
-
-## Why Use a Python Script (index.py) to Update index.html?
-The Python script index.py plays a critical role in automating the content management process for the static website. Here are some reasons we chose to include and use it:
-
-Automated Content Updates:
-
-The index.py script generates the index.html file dynamically and uploads it to the GCS bucket. This approach makes it easy to update content on the website without manual file edits and re-uploading, which is especially useful if the content is expected to change periodically.
-By running this script, you can automate the content update process, ensuring that any changes made in index.html are quickly reflected in the GCS bucket and accessible via the HTTPS load balancer.
+## Additional Notes
+Cache Control: Content updates are made in real-time but cached with a 1-minute TTL for high availability.
+DNS Propagation: DNS records may take time to propagate, so allow time after initial setup.
