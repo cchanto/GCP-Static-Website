@@ -15,7 +15,7 @@ pipeline {
                     sh '''
                     gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
                     gcloud config set project $PROJECT_ID
-                    terraform  init
+                    terraform -chdir=./Terraform init
                     '''
                 }
             }
@@ -24,7 +24,7 @@ pipeline {
         stage('Terraform Destroy') {
             steps {
                 sh '''
-                terraform destroy -auto-approve
+                terraform -chdir=./Terraform destroy -auto-approve
                 '''
             }
         }
@@ -52,7 +52,7 @@ pipeline {
                     sh '''
                     gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
                     gcloud config set project $PROJECT_ID
-                    terraform  init
+                    terraform -chdir=./Terraform init
                     '''
                 }
             }
@@ -61,7 +61,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 sh '''
-                terraform  plan -out=tfplan
+                terraform -chdir=./Terraform plan -out=tfplan
                 '''
             }
         }
@@ -69,7 +69,7 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 sh '''
-                terraform apply -auto-approve tfplan
+                terraform -chdir=./Terraform apply -auto-approve tfplan
                 '''
             }
         }
