@@ -5,9 +5,6 @@ resource "google_storage_bucket" "website" {
   location      = "US"
   force_destroy = true
 
-  versioning {
-    enabled = true  # Enables versioning for backup and recovery
-  }
 
   logging {
     log_bucket        = "poc-test-infra"  # Replace with your logging bucket to capture access logs
