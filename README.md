@@ -116,3 +116,12 @@ DNS Propagation: Allow time for DNS changes to propagate.
 Additional Notes
 Security: The bucket is publicly accessible. For private deployments, consider using signed URLs.
 Cost Management: Be aware of Cloud CDN and Cloud DNS costs, especially when testing.
+
+
+## Why Use a Python Script (index.py) to Update index.html?
+The Python script index.py plays a critical role in automating the content management process for the static website. Here are some reasons we chose to include and use it:
+
+Automated Content Updates:
+
+The index.py script generates the index.html file dynamically and uploads it to the GCS bucket. This approach makes it easy to update content on the website without manual file edits and re-uploading, which is especially useful if the content is expected to change periodically.
+By running this script, you can automate the content update process, ensuring that any changes made in index.html are quickly reflected in the GCS bucket and accessible via the HTTPS load balancer.
