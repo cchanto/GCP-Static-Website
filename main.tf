@@ -4,6 +4,20 @@ variable "project_id" {
   type        = string
   default = "poc-test-infra"
 }
+
+terraform {
+  
+  backend "gcs" {
+    bucket  = "poc-test-infra"
+    prefix  = "poc"
+  }
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 6.8.0"
+    }
+  }
+}
 module "storage" {
   source          = "./modules/storage"
   bucket_name     = "chantowebtest1"
