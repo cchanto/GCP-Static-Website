@@ -92,11 +92,15 @@ resource "google_compute_url_map" "website" {
   name            = "website-url-map"
   default_service = google_compute_backend_bucket.website-backend.self_link
 
-  # Optional: Define host and path matching rules
-  path_matcher {
-    name            = "allpaths"
-    default_service = google_compute_backend_bucket.website-backend.self_link
-  }
+  # host_rule {
+  #   hosts        = ["*"]
+  #   path_matcher = "allpaths"
+  # }
+
+  # path_matcher {
+  #   name            = "allpaths"
+  #   default_service = google_compute_backend_bucket.website-backend.self_link
+  # }
 }
 
 # HTTPS Target Proxy
@@ -107,13 +111,13 @@ resource "google_compute_target_https_proxy" "website" {
   ssl_certificates = [google_compute_managed_ssl_certificate.website.self_link]
 }
 
-# External HTTPS Forwarding Rule
-resource "google_compute_global_forwarding_rule" "https" {
+# HTTPS Forwarding Rule
+resource "google_compute_global_forwarding_rule" "default" {
   provider              = google
-  name                  = "website-https-forwarding-rule"
-  load_balancing_scheme = "EXTERNAL"  # Specify as external
+  name                  = "website-forwarding-rule"
+  load_balancing_scheme = "EXTERNAL"
   ip_address            = google_compute_global_address.website.address
-  ip_protocol           = "TCP"  # Use TCP as required
-  port_range            = "443"  # HTTPS default port
+  ip_protocol           = "TCP"  # Updated to TCP for compatibility
+  port_range            = "443"
   target                = google_compute_target_https_proxy.website.self_link
 }
