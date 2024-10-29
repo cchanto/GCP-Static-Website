@@ -46,3 +46,18 @@ variable "project_id" {
   default = "poc-test-infra"
 }
         
+
+variable "websitepoc-cert" {
+  description = "HTTPS cert name"
+  default = "websitep11oc-cert"
+}
+
+variable "websitepoc-target-proxy" {
+   type = string
+}
+
+variable "website-url-map" {
+  type        = string
+  default = "websitep11oc"
+}
+

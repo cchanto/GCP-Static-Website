@@ -38,7 +38,7 @@ resource "google_storage_bucket_object" "static_site_src" {
 # Reserve an external IP
 resource "google_compute_global_address" "website" {
   provider = google
-  name     = var.global_address  // Should be a valid name, not an IP
+  name     = "websitelbip"  // Should be a valid name, not an IP
   project  = var.project_id      // Ensure project is set
 }
 
@@ -73,16 +73,15 @@ resource "google_compute_backend_bucket" "website-backend" {
 resource "google_compute_managed_ssl_certificate" "website" {
   provider = google-beta
   project  = var.project_id // Ensure project is set
-  name     = "websitepoc-cert"
+  name     = var.websitepoc-cert
   managed {
     domains = [google_dns_record_set.website.name]
   }
 }
-
 # Define the URL map for the load balancer
 resource "google_compute_url_map" "website" {
   provider        = google
-  project         = var.project_id // Ensure project is set
+  project         = var.project_id  # Ensure project is set
   name            = "websitepoc-url-map"
   default_service = google_compute_backend_bucket.website-backend.self_link  # Set default service
 
@@ -97,23 +96,43 @@ resource "google_compute_url_map" "website" {
   }
 }
 
-# HTTPS Target Proxy
+
+# Define the URL map for the load balancer
+resource "google_compute_url_map" "website1" {
+  provider        = google
+  project         = var.project_id  # Ensure project is set
+  name            = var.website-url-map
+  default_service = google_compute_backend_bucket.website-backend.self_link  # Set default service
+
+  path_matcher {
+    name            = "allpaths"  # Define a path matcher
+    default_service = google_compute_backend_bucket.website-backend.self_link  # Set default backend service
+
+    path_rule {
+      paths   = ["/*"]  # Match all paths
+      service = google_compute_backend_bucket.website-backend.self_link  # Specify backend service
+    }
+  }
+}
+
+
 resource "google_compute_target_https_proxy" "website" {
   provider         = google
-  project          = var.project_id // Ensure project is set
-  name             = "websitepoc-target-proxy"
+  name             = var.target_proxy_name  // Use the passed variable
   url_map          = google_compute_url_map.website.self_link
-  ssl_certificates = [google_compute_managed_ssl_certificate.website.self_link]
+  ssl_certificates = [var.ssl_certificate]
+  project          = var.project_id // Ensure project is set
 }
+
 
 # HTTPS Forwarding Rule
 resource "google_compute_global_forwarding_rule" "default" {
   provider              = google
-  project               = var.project_id // Ensure project is set
-  name                  = "websitepoc-forwarding-rule"
+  project               = var.project_id  # Ensure project is set
+  name                  = "website-forwarding-rule"
   load_balancing_scheme = "EXTERNAL"
   ip_address            = google_compute_global_address.website.address
-  ip_protocol           = "TCP"  # Updated to TCP for compatibility
+  ip_protocol           = "TCP"
   port_range            = "443"
-  target                = google_compute_target_https_proxy.website.self_link
+  target                = google_compute_target_https_proxy.website.self_link  # Reference the HTTPS target proxy
 }
