@@ -34,9 +34,11 @@ variable "ssl_certificate" {
 }
 
 variable "global_address" {
-  description = "Global IP address for the load balancer"
+  description = "Name for the reserved global IP address"
   type        = string
+  default     = "website-lb-ip"  # Ensure this is a valid name
 }
+
 
 variable "project_id" {
   description = "The GCP project ID"

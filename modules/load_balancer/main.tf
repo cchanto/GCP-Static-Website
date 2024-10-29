@@ -1,13 +1,17 @@
 # Define the storage bucket
 resource "google_storage_bucket" "website" {
   provider      = google
-  project  = var.project_id // Ensure project is set
+  project       = var.project_id // Ensure project is set
   name          = "chantowebtest"
   location      = "US"
   force_destroy = true
 
   versioning {
     enabled = false
+  }
+
+  lifecycle {
+    prevent_destroy = false  # Prevent accidental deletion
   }
 }
 
@@ -34,13 +38,12 @@ resource "google_storage_bucket_object" "static_site_src" {
 # Reserve an external IP
 resource "google_compute_global_address" "website" {
   provider = google
-  name     = "website1-lb-ip"
-  project  = var.project_id // Ensure project is set
-
+  name     = var.global_address  // Should be a valid name, not an IP
+  project  = var.project_id      // Ensure project is set
 }
 
 # Retrieve the managed DNS zone
-data "google_dns_managed_zone" "gcp_coffeetime_dev" {
+data "google_dns_managed_zone" "gcp_dev" {
   provider = google
   project  = var.project_id // Ensure project is set
   name     = "testchanto"  # Ensure this DNS zone exists
@@ -49,28 +52,28 @@ data "google_dns_managed_zone" "gcp_coffeetime_dev" {
 # Add the IP to the DNS record
 resource "google_dns_record_set" "website" {
   provider     = google
-  name         = "website.${data.google_dns_managed_zone.gcp_coffeetime_dev.dns_name}"
+  name         = "websitepoc.${data.google_dns_managed_zone.gcp_dev.dns_name}"
   type         = "A"
   ttl          = 30
-  managed_zone = data.google_dns_managed_zone.gcp_coffeetime_dev.name
+  managed_zone = data.google_dns_managed_zone.gcp_dev.name
   rrdatas      = [google_compute_global_address.website.address]
-  project  = var.project_id // Ensure project is set
+  project      = var.project_id // Ensure project is set
 }
 
 # Backend bucket with CDN enabled and cache configuration
 resource "google_compute_backend_bucket" "website-backend" {
   provider    = google
-  project  = var.project_id // Ensure project is set
-  name        = "website1-backend"
+  project     = var.project_id // Ensure project is set
+  name        = "websitepoc-backend"
   bucket_name = google_storage_bucket.website.name
   enable_cdn  = true
 }
 
 # Create HTTPS certificate
 resource "google_compute_managed_ssl_certificate" "website" {
-  project  = var.project_id // Ensure project is set
   provider = google-beta
-  name     = "website1-cert"
+  project  = var.project_id // Ensure project is set
+  name     = "websitepoc-cert"
   managed {
     domains = [google_dns_record_set.website.name]
   }
@@ -79,13 +82,14 @@ resource "google_compute_managed_ssl_certificate" "website" {
 # Define the URL map for the load balancer
 resource "google_compute_url_map" "website" {
   provider        = google
-  project  = var.project_id // Ensure project is set
-  name            = "website-url-map"
+  project         = var.project_id // Ensure project is set
+  name            = "websitepoc-url-map"
   default_service = google_compute_backend_bucket.website-backend.self_link  # Set default service
 
   path_matcher {
     name            = "allpaths"  # Define a path matcher
     default_service = google_compute_backend_bucket.website-backend.self_link
+
     path_rule {
       paths   = ["/*"]  # Match all paths
       service = google_compute_backend_bucket.website-backend.self_link  # Specify backend service
@@ -96,18 +100,17 @@ resource "google_compute_url_map" "website" {
 # HTTPS Target Proxy
 resource "google_compute_target_https_proxy" "website" {
   provider         = google
-  name             = "website-target-proxy"
+  project          = var.project_id // Ensure project is set
+  name             = "websitepoc-target-proxy"
   url_map          = google_compute_url_map.website.self_link
   ssl_certificates = [google_compute_managed_ssl_certificate.website.self_link]
-  project  = var.project_id // Ensure project is set
 }
 
 # HTTPS Forwarding Rule
 resource "google_compute_global_forwarding_rule" "default" {
-  project  = var.project_id // Ensure project is set
   provider              = google
-  name                  = "website-forwarding-rule"
-
+  project               = var.project_id // Ensure project is set
+  name                  = "websitepoc-forwarding-rule"
   load_balancing_scheme = "EXTERNAL"
   ip_address            = google_compute_global_address.website.address
   ip_protocol           = "TCP"  # Updated to TCP for compatibility

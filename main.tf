@@ -8,7 +8,7 @@ variable "project_id" {
 terraform {
   
   backend "gcs" {
-    bucket  = "poc-test-infra"
+    bucket  = "inframodules"
     prefix  = "poc"
   }
   required_providers {
@@ -27,18 +27,18 @@ module "storage" {
 
 module "networking" {
   source              = "./modules/networking"
-  global_address_name = "website2-lb-ip"
+  global_address_name = "websitepoc1-lb-ip"
   dns_zone_name       = "testchanto"
   project_id          = var.project_id // Pass the project ID
 }
 
 module "load_balancer" {
   source              = "./modules/load_balancer"
-  backend_bucket_name = "website1-backend"
+  backend_bucket_name = "websitepoc-backend"
   bucket_name         = module.storage.bucket_name
-  url_map_name        = "website1-url-map"
-  target_proxy_name   = "website1-target-proxy"
-  forwarding_rule_name = "website1-forwarding-rule"
+  url_map_name        = "websitepoc-url-map"
+  target_proxy_name   = "websitepoc-target-proxy"
+  forwarding_rule_name = "websitepoc-forwarding-rule"
   ssl_certificate     = module.ssl_certificate.ssl_certificate_self_link
   global_address      = module.networking.global_ip_address
   project_id          = var.project_id // Pass the project ID
@@ -47,7 +47,7 @@ module "load_balancer" {
 
 module "ssl_certificate" {
   source               = "./modules/ssl_certificate"
-  ssl_certificate_name = "website-cert"
-  domain_name          = "testchanto.com" // Replace with your actual domain
+  ssl_certificate_name = "websitepoc-cert"
+  domain_name          = "testchantopoc.com" // Replace with your actual domain
   project_id          = var.project_id // Pass the project ID
 }
