@@ -143,6 +143,17 @@ DNS Propagation: DNS records may take time to propagate, so allow time after ini
 (https://storage.googleapis.com/chantowebtest/index.html ) 
 
 
+## Why No VPC is Used in This Setup
+
+For this static website infrastructure, a VPC (Virtual Private Cloud) is not utilized. This decision is based on several considerations:
+
+- **Public Access Requirement:** Since this is a static website hosted on Google Cloud Storage, it needs to be accessible to the public internet. Google Cloud’s public load balancing and Google Storage’s CDN support meet the requirements without additional networking configurations.
+
+- **Cost Efficiency:** Avoiding a VPC keeps costs lower, as there is no need to manage and maintain private networking resources that are unnecessary for a public static site.
+
+- **Simplicity:** By excluding a VPC, the infrastructure remains straightforward, with fewer components to manage and monitor. This setup reduces complexity while fulfilling the requirements of a publicly accessible, static website.
+
+This configuration leverages Google Cloud’s built-in security and CDN caching to provide a reliable, accessible website without the need for private networking resources.
 
 
 ## Project Structure
