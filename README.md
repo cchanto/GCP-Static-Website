@@ -16,7 +16,7 @@ This project sets up a static website hosted on Google Cloud Platform (GCP) usin
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/yourusername/GCP-Static-Website.git
+   git clone https://github.com/cchanto/GCP-Static-Website.git
    cd GCP-Static-Website
 
    Configure Variables:
