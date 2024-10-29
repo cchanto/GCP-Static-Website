@@ -1,4 +1,3 @@
-# Bucket to store website content with versioning and logging for enhanced security
 resource "google_storage_bucket" "website" {
   provider      = google
   name          = "chantowebtest"
@@ -6,23 +5,19 @@ resource "google_storage_bucket" "website" {
   force_destroy = true
 
   versioning {
-    enabled = true  # Enables versioning for backup and recovery
-  }
-
-  logging {
-    log_bucket        = "poc-test-infra"  # Replace with your logging bucket to capture access logs
-    log_object_prefix = "logs"
+    enabled = false
   }
 }
 
-# Public access control for objects but restricts bucket-level permissions
-resource "google_storage_bucket_iam_member" "website_public_access" {
+# Make new objects public
+resource "google_storage_object_access_control" "public_rule" {
+  object = google_storage_bucket_object.static_site_src.output_name
   bucket = google_storage_bucket.website.name
-  role   = "roles/storage.objectViewer"
-  member = "allUsers"
+  role   = "READER"
+  entity = "allUsers"
 }
 
-# Upload HTML file to the bucket with no-cache settings for real-time updates
+# Upload the html file to the bucket with Cache-Control header
 resource "google_storage_bucket_object" "static_site_src" {
   name   = "index.html"
   source = "../website/index.html"
@@ -33,19 +28,19 @@ resource "google_storage_bucket_object" "static_site_src" {
   depends_on = [google_storage_bucket.website]
 }
 
-# Reserve an external IP for the load balancer
+# Reserve an external IP
 resource "google_compute_global_address" "website" {
   provider = google
   name     = "website-lb-ip"
 }
 
-# Retrieve managed DNS zone for automatic DNS configuration
+# Retrieve the managed DNS zone
 data "google_dns_managed_zone" "gcp_coffeetime_dev" {
   provider = google
   name     = "testchanto"
 }
 
-# DNS record for the website's IP address
+# Add the IP to the DNS record
 resource "google_dns_record_set" "website" {
   provider     = google
   name         = "website.${data.google_dns_managed_zone.gcp_coffeetime_dev.dns_name}"
@@ -55,7 +50,7 @@ resource "google_dns_record_set" "website" {
   rrdatas      = [google_compute_global_address.website.address]
 }
 
-# CDN-backed backend bucket with cache configuration and logging enabled
+# Backend bucket with CDN enabled and cache configuration
 resource "google_compute_backend_bucket" "website-backend" {
   provider    = google
   name        = "website-backend"
@@ -64,25 +59,25 @@ resource "google_compute_backend_bucket" "website-backend" {
   enable_cdn  = true
 
   cdn_policy {
-    cache_mode        = "CACHE_ALL_STATIC"  # Cache only static content
-    client_ttl        = 60                  # Client-side cache TTL: 1 minute
-    default_ttl       = 60                  # Default TTL for cached objects: 1 minute
-    max_ttl           = 60                  # Maximum cache TTL: 1 minute
-    serve_while_stale = 60                  # Serve stale content for 1 minute if origin fails
+    cache_mode        = "CACHE_ALL_STATIC"   # Cache only static content
+    client_ttl        = 60                   # Client-side cache TTL: 1 minute
+    default_ttl       = 60                   # Default TTL for cached objects: 1 minute
+    max_ttl           = 60                   # Maximum cache TTL for objects: 1 minute
+    serve_while_stale = 60                # Serve stale content for 1 day if origin fails
 
     negative_caching = true
     negative_caching_policy {
       code = 404
-      ttl  = 30  # Cache 404 responses for 30 seconds
+      ttl  = 30  # Cache 404 responses for 5 minutes
     }
     negative_caching_policy {
       code = 410
-      ttl  = 30  # Cache 410 responses for 30 seconds
+      ttl  = 30  # Cache 410 responses for 5 minutes
     }
   }
 }
 
-# SSL Certificate for secure HTTPS connection
+# Create HTTPS certificate
 resource "google_compute_managed_ssl_certificate" "website" {
   provider = google-beta
   name     = "website-cert"
@@ -91,25 +86,24 @@ resource "google_compute_managed_ssl_certificate" "website" {
   }
 }
 
-# Define the URL map for the load balancer with host and path matcher
+# Define the URL map for the load balancer
 resource "google_compute_url_map" "website" {
   provider        = google
   name            = "website-url-map"
   default_service = google_compute_backend_bucket.website-backend.self_link
 
-  host_rule {
-    hosts        = ["*"]
-    path_matcher = "allpaths"
-  }
+  # host_rule {
+  #   hosts        = ["*"]
+  #   path_matcher = "allpaths"
+  # }
 
-  path_matcher {
-    name            = "allpaths"
-    default_service = google_compute_backend_bucket.website-backend.self_link
-  }
+  # path_matcher {
+  #   name            = "allpaths"
+  #   default_service = google_compute_backend_bucket.website-backend.self_link
+  # }
 }
 
-
-# HTTPS target proxy that links the URL map to the SSL certificate
+# HTTPS Target Proxy
 resource "google_compute_target_https_proxy" "website" {
   provider         = google
   name             = "website-target-proxy"
@@ -117,16 +111,13 @@ resource "google_compute_target_https_proxy" "website" {
   ssl_certificates = [google_compute_managed_ssl_certificate.website.self_link]
 }
 
-# Global forwarding rule for directing traffic to the load balancer on HTTPS
+# HTTPS Forwarding Rule
 resource "google_compute_global_forwarding_rule" "default" {
   provider              = google
   name                  = "website-forwarding-rule"
   load_balancing_scheme = "EXTERNAL"
   ip_address            = google_compute_global_address.website.address
-  ip_protocol           = "TCP"
+  ip_protocol           = "TCP"  # Updated to TCP for compatibility
   port_range            = "443"
   target                = google_compute_target_https_proxy.website.self_link
 }
-
-
-
