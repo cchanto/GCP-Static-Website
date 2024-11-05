@@ -28,6 +28,19 @@ pipeline {
             }
         }
 
+        stage('Terraform Destroy') {
+            steps {
+                withCredentials([file(credentialsId: 'gcloud-creds', variable: 'GCLOUD_CREDS')]) {
+                    sh '''
+                    gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
+                    gcloud config set project $PROJECT_ID
+                    terraform init
+                    terraform destroy -auto-approve
+                    '''
+                }
+            }
+        }
+
         stage('Terraform Init') {
             steps {
                 withCredentials([file(credentialsId: 'gcloud-creds', variable: 'GCLOUD_CREDS')]) {
@@ -43,7 +56,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 sh '''
-                terraform  plan -out=tfplan
+                terraform plan -out=tfplan
                 '''
             }
         }
@@ -51,7 +64,7 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 sh '''
-                terraform  apply -auto-approve tfplan
+                terraform apply -auto-approve tfplan
                 '''
             }
         }
